@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - ': "${AWS_ACCOUNT_ID:?Set AWS_ACCOUNT_ID in the CodeBuild environment}"'
+      - ': "${IMAGE_REPO_NAME:?Set IMAGE_REPO_NAME in the CodeBuild environment}"'
+      - ': "${ECS_EXECUTION_ROLE_ARN:?Set ECS_EXECUTION_ROLE_ARN in the CodeBuild environment}"'
+      - ': "${ECS_TASK_ROLE_ARN:?Set ECS_TASK_ROLE_ARN in the CodeBuild environment}"'
+      - ': "${POSTGRES_CONNECTION_SECRET_ARN:?Set POSTGRES_CONNECTION_SECRET_ARN in the CodeBuild environment}"'
+      - export REPOSITORY_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}"
+      - export IMAGE_TAG="${CODEBUILD_RESOLVED_SOURCE_VERSION:0:7}"
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | docker login --username AWS --password-stdin "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
+  build:
+    commands:
+      - docker build -f deploy/Dockerfile -t "${REPOSITORY_URI}:${IMAGE_TAG}" .
+  post_build:
+    commands:
+      - docker push "${REPOSITORY_URI}:${IMAGE_TAG}"
+      - printf '[{"name":"sapient-task-api","imageUri":"%s"}]' "${REPOSITORY_URI}:${IMAGE_TAG}" > imagedefinitions.json
+      - jq --arg image "${REPOSITORY_URI}:${IMAGE_TAG}" --arg region "$AWS_DEFAULT_REGION" --arg executionRole "$ECS_EXECUTION_ROLE_ARN" --arg taskRole "$ECS_TASK_ROLE_ARN" --arg connectionSecret "$POSTGRES_CONNECTION_SECRET_ARN" '.executionRoleArn = $executionRole | .taskRoleArn = $taskRole | .containerDefinitions[0].image = $image | .containerDefinitions[0].logConfiguration.options["awslogs-region"] = $region | .containerDefinitions[0].secrets[0].valueFrom = $connectionSecret' deploy/task-definition-template.json > task-definition.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
+    - task-definition.json

@@ -2,24 +2,38 @@
 
 A pharmacy application with an ASP.NET Core Web API and Angular UI.
 
+## Project layout
+
+```text
+src/
+  API/
+  UI/
+tests/
+  API.Tests/
+deploy/
+  Dockerfile
+  buildspec.yml
+  task-definition-template.json
+```
+
 ## Run the API
 
 ```bash
-cd API
+cd src/API
 dotnet run --urls http://localhost:5010
 ```
 
-By default, the API stores medicine data in `API/Database/medicines.json`.
+By default, the API stores medicine data in `src/API/Database/medicines.json`.
 
-## Database providers
+### Database providers
 
 The API uses the JSON repository by default. Select PostgreSQL by setting
-`Database:Provider` to `PostgreSql` in `API/appsettings.json`, then provide the
-connection string with the `ConnectionStrings__PharmacyDatabase` environment
+`Database:Provider` to `PostgreSql` in `src/API/appsettings.json`, then provide
+the connection string with the `ConnectionStrings__PharmacyDatabase` environment
 variable:
 
 ```bash
-cd API
+cd src/API
 Database__Provider=PostgreSql \
 ConnectionStrings__PharmacyDatabase='Host=localhost;Port=5432;Database=pharmacy;Username=postgres;Password=your-password' \
 dotnet run --urls http://localhost:5010
@@ -32,25 +46,35 @@ each provider stores its data independently.
 ## Run the UI
 
 ```bash
-cd UI
+cd src/UI
 npm install
 ng serve
 ```
 
 The UI runs at `http://localhost:4200`.
 
-## Tests
+## Tests and builds
 
 ```bash
-dotnet test API.Tests/PharmacyApp.Api.Tests.csproj
+dotnet test tests/API.Tests/API.Tests.csproj
+dotnet build src/API/API.csproj
+cd src/UI && npm install && npm run build
 ```
 
-## Build
+## Container and AWS deployment
+
+Build the API image from the repository root with:
 
 ```bash
-cd API
-dotnet build
-
-cd ../UI
-ng build
+docker build -f deploy/Dockerfile -t sapient-task-api .
 ```
+
+`deploy/buildspec.yml` builds and pushes the image to ECR and produces task
+definition artifacts. Configure the CodeBuild environment with
+`AWS_ACCOUNT_ID`, `IMAGE_REPO_NAME`, `ECS_EXECUTION_ROLE_ARN`,
+`ECS_TASK_ROLE_ARN`, and `POSTGRES_CONNECTION_SECRET_ARN`. Store the PostgreSQL
+connection string in AWS Secrets Manager and provide its ARN through
+`POSTGRES_CONNECTION_SECRET_ARN`; do not put credentials in the task definition.
+Enable privileged mode for the CodeBuild project. Its role needs permission to
+authenticate to and push images to ECR. The ECS execution role needs permission
+to pull the image, write container logs, and read the connection-string secret.
