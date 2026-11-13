@@ -9,14 +9,23 @@ env:
     CONTAINER_NAME: "Main"
 
 phases:
+  
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - echo "Checking AWS identity..."
       - aws sts get-caller-identity
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION > /tmp/ecr-password
-      - cat /tmp/ecr-password | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - echo "Checking ECR repository..."
+      - aws ecr describe-repositories --repository-names sapient_task/api --region ap-southeast-2
+      - echo "Generating ECR authentication token..."
+      - aws ecr get-login-password --region ap-southeast-2 > /tmp/ecr-password
+      - test -s /tmp/ecr-password
+      - echo "Logging in to ECR..."
+      - docker login --username AWS --password-stdin 931814980230.dkr.ecr.ap-southeast-2.amazonaws.com < /tmp/ecr-password
+      - echo "Preparing image tag..."
+      - REPOSITORY_URI=931814980230.dkr.ecr.ap-southeast-2.amazonaws.com/sapient_task/api
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
+
 
   build:
     commands:
