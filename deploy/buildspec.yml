@@ -30,8 +30,8 @@ phases:
   build:
     commands:
       - echo "Restoring and testing .NET solution..."
-      - docker run --rm -v "$CODEBUILD_SRC_DIR:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet restore SapientTask.sln
-      - docker run --rm -v "$CODEBUILD_SRC_DIR:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet test SapientTask.sln --no-restore --configuration Release
+      - docker run --rm -v "$CODEBUILD_SRC_DIR:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet restore MedicineApp.slnx
+      - docker run --rm -v "$CODEBUILD_SRC_DIR:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet test MedicineApp.slnx --no-restore --configuration Release
       - echo "Building AMD64 Docker image..."
       - docker build --platform linux/amd64 -f deploy/Dockerfile -t $REPOSITORY_URI:$IMAGE_TAG .
 
