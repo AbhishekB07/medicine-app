@@ -1,0 +1,48 @@
+{
+  "family": "sapient-task-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "SET_BY_BUILDSPEC",
+  "taskRoleArn": "SET_BY_BUILDSPEC",
+  "containerDefinitions": [
+    {
+      "name": "sapient-task-api",
+      "image": "SET_BY_BUILDSPEC",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "ASPNETCORE_URLS",
+          "value": "http://+:8080"
+        },
+        {
+          "name": "Database__Provider",
+          "value": "PostgreSql"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "ConnectionStrings__PharmacyDatabase",
+          "valueFrom": "SET_BY_BUILDSPEC"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sapient-task-api",
+          "awslogs-region": "SET_BY_BUILDSPEC",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

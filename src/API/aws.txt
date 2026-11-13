@@ -1,0 +1,192 @@
+aws sts get-caller-identity   
+
+
+
+
+
+
+
+
+aws eks create-access-entry --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:user/aws-common-user \
+  --type STANDARD
+
+aws eks associate-access-policy --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:role/GitHubActionsRole \
+  --policy-arn arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy \
+  --access-scope type=cluster
+
+  aws ecr create-repository --repository-name sapient_task/api --region ap-southeast-2
+
+
+  aws eks create-access-entry --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:role/managed/AccountFullAccessRole \
+  --type STANDARD
+
+  aws eks associate-access-policy --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:role/managed/AccountFullAccessRole \
+  --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy \
+  --access-scope type=cluster
+
+  aws eks update-kubeconfig --region ap-southeast-2 --name my-eks-cluster
+
+
+  gpt- how to deploy the images from ecr to eks
+
+
+  1. aws eks update-kubeconfig \
+  --region ap-southeast-2 \
+  --name my-eks-cluster
+
+  2. kubectl get nodes
+
+  # 1. Check AWS identity
+aws sts get-caller-identity
+
+# 2. Check cluster
+aws eks describe-cluster \
+  --name my-eks-cluster \
+  --region ap-southeast-2
+
+# 3. Generate EKS token
+aws eks get-token \
+  --cluster-name my-eks-cluster \
+  --region ap-southeast-2
+
+# 4. Update kubeconfig
+aws eks update-kubeconfig \
+  --name my-eks-cluster \
+  --region ap-southeast-2
+
+# 5. Test Kubernetes connection
+kubectl get nodes
+
+
+
+aws eks list-access-entries \
+  --cluster-name my-eks-cluster \
+  --region ap-southeast-2
+
+
+  aws eks create-access-entry \
+  --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:user/aws-common-user \
+  --type STANDARD \
+  --region ap-southeast-2
+
+  aws eks associate-access-policy \
+  --cluster-name my-eks-cluster \
+  --principal-arn arn:aws:iam::931814980230:user/aws-common-user \
+  --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy \
+  --access-scope type=cluster \
+  --region ap-southeast-2
+
+
+
+
+  aws ecr describe-repositories --region ap-southeast-2
+
+
+  aws ecr describe-images \
+  --repository-name YOUR_REPOSITORY_NAME \
+  --region ap-south-1 \
+  --query 'imageDetails[*].[latest,imageDigest]'
+
+
+check 
+  aws eks list-fargate-profiles \
+  --cluster-name my-eks-cluster \
+  --region ap-southeast-2
+
+
+Check your cluster's compute configuration
+
+aws eks describe-cluster \
+  --name my-eks-cluster \
+  --region ap-southeast-2 \
+  --query 'cluster.{Status:status,Version:version,ComputeConfig:computeConfig,VPC:resourcesVpcConfig}'
+
+
+aws ec2 describe-instances \
+  --instance-ids i-0629ef7195ce944bd i-0aa38c114b552c867 \
+  --region ap-southeast-2 \
+  --query 'Reservations[*].Instances[*].[InstanceId,SubnetId,VpcId,PrivateIpAddress,SecurityGroups[*].GroupId]'
+
+  aws ec2 describe-subnets \
+  --subnet-ids subnet-03553fa58c952e79f subnet-03553fa58c952e79f \
+  --region ap-southeast-2 \
+  --query 'Subnets[*].{Subnet:SubnetId,AZ:AvailabilityZone,CIDR:CidrBlock}'
+
+
+  aws ec2 describe-vpc-attribute \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --attribute enableDnsSupport \
+  --region ap-southeast-2
+
+  aws ec2 describe-vpc-attribute \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --attribute enableDnsHostnames \
+  --region ap-southeast-2
+
+
+aws ec2 create-security-group \
+  --group-name eks-ecr-endpoint-sg \
+  --description "Allow EKS worker nodes to access ECR endpoints" \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --region ap-southeast-2
+
+
+  aws ec2 authorize-security-group-ingress \
+  --group-id sg-001fbafe53562a46f \
+  --protocol tcp \
+  --port 443 \
+  --source-group sg-0542685df91c48176 \
+  --region ap-southeast-2
+
+  aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.ap-southeast-2.ecr.api \
+  --subnet-ids subnet-03553fa58c952e79f \
+  --security-group-ids sg-001fbafe53562a46f \
+  --private-dns-enabled \
+  --region ap-southeast-2
+
+  aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --vpc-endpoint-type Interface \
+  --service-name com.amazonaws.ap-southeast-2.ecr.dkr \
+  --subnet-ids subnet-03553fa58c952e79f \
+  --security-group-ids sg-001fbafe53562a46f \
+  --private-dns-enabled \
+  --region ap-southeast-2
+
+  aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --vpc-endpoint-type Gateway \
+  --service-name com.amazonaws.ap-southeast-2.s3 \
+  --route-table-ids YOUR_WORKER_ROUTE_TABLE_ID \
+  --region ap-southeast-2
+
+
+
+--Verify your ECR endpoint
+  aws ec2 describe-vpc-endpoints \
+  --filters Name=vpc-id,Values=vpc-0f774ccbd00f17143 \
+  --region ap-southeast-2 \
+  --query 'VpcEndpoints[*].{Service:ServiceName,Type:VpcEndpointType,State:State,RouteTables:RouteTableIds,PrivateDNS:PrivateDnsEnabled}'
+
+
+--Find the correct route table for S3
+  aws ec2 describe-route-tables \
+  --filters Name=vpc-id,Values=vpc-0f774ccbd00f17143 \
+  --region ap-southeast-2 \
+  --query 'RouteTables[*].{ID:RouteTableId,Associations:Associations[*].{Subnet:SubnetId,Main:Main}}'
+
+
+  aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-0f774ccbd00f17143 \
+  --vpc-endpoint-type Gateway \
+  --service-name com.amazonaws.ap-southeast-2.s3 \
+  --route-table-ids rtb-04d35348199171366 \
+  --region ap-southeast-2
