@@ -1,0 +1,5 @@
+API.Tests/bin/*
+API.Tests/obj/*
+API/bin/*
+API/obj/*
+API/aws.txt
