@@ -1,5 +1,3 @@
-API.Tests/bin/*
-API.Tests/obj/*
-API/bin/*
-API/obj/*
+**/bin/
+**/obj/
 API/aws.txt
