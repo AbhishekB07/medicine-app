@@ -46,7 +46,7 @@ public class MedicineController : ControllerBase
         return Ok(medicines);
     }
 
-    [HttpPost("add")]
+    // [HttpPost("add")]
     public async Task<ActionResult<MedicineResponse>> AddMedicineAsync([FromBody] CreateMedicineRequest request)
     {
         if (request.ExpiryDate <= DateOnly.FromDateTime(DateTime.Today))
