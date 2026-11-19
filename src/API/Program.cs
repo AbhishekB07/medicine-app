@@ -33,6 +33,8 @@ else if (databaseProvider.Equals("PostgreSql", StringComparison.OrdinalIgnoreCas
         ?? throw new InvalidOperationException(
             "ConnectionStrings:PharmacyDatabase must be configured when Database:Provider is PostgreSql.");
 
+            Console.WriteLine($"Using PostgreSQL database with connection string: {connectionString}");
+
     builder.Services.AddDbContext<PharmacyDbContext>(options => options.UseNpgsql(connectionString));
     builder.Services.AddScoped<IMedicineRepository, PostgresMedicineRepository>();
 }
