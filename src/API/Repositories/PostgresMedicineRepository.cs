@@ -61,4 +61,9 @@ public sealed class PostgresMedicineRepository(PharmacyDbContext dbContext) : IM
             .Replace("%", "\\%", StringComparison.Ordinal)
             .Replace("_", "\\_", StringComparison.Ordinal);
     }
+
+    public Task<string> GetDatabaseProviderAsync()
+    {
+        return Task.FromResult("PostgreSql");
+    }
 }

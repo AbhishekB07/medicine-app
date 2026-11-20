@@ -64,6 +64,14 @@ app.UseHttpsRedirection();
 
 app.UseExceptionHandler("/error");
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapGet("/health", () =>
+{
+    Console.WriteLine($"Health check requested at {DateTime.UtcNow}. Request URL: {new UriBuilder().Uri}");
+    Console.WriteLine(databaseProvider.Equals("PostgreSql", StringComparison.OrdinalIgnoreCase)
+        ? "Database provider: PostgreSQL"
+        : "Database provider: Json");
+    var response = new { status = "Healthy" };
+    return Results.Json(response);
+});
 
 app.Run();

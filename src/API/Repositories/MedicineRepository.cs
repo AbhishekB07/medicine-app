@@ -233,4 +233,9 @@ public class MedicineRepository : IMedicineRepository
 
         await SaveAllAsync(medicines);
     }
+
+    public Task<string> GetDatabaseProviderAsync()
+    {
+        return Task.FromResult("Json");
+    }
 }

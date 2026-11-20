@@ -26,7 +26,8 @@ public class MedicineController : ControllerBase
         {
             return BadRequest("pageNumber must be at least 1 and pageSize must be between 1 and 100.");
         }
-
+        Console.WriteLine(_medicineRepository.GetType().Name);
+        Console.WriteLine(await _medicineRepository.GetDatabaseProviderAsync());
         var medicines = await _medicineRepository.GetAllAsync(query, pageNumber, pageSize);
 
         return Ok(new MedicineListResponse
