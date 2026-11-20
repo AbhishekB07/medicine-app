@@ -197,5 +197,10 @@ public sealed class MedicineControllerTests
             AddedMedicine = medicine;
             return Task.FromResult(medicine);
         }
+
+        public Task<string> GetDatabaseProviderAsync()
+        {
+            return Task.FromResult("Fake");
+        }
     }
 }
